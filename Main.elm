@@ -117,7 +117,7 @@ update msg model =
                 -- Only process clicks if the game is playing
                 (Playing game, Pod _) -> 
                     if playerCanMove game cell
-                    then ( Playing { game | cellQty = sow game cell, turn = other game.turn}, Cmd.none )
+                    then ( Playing (makeMove game cell), Cmd.none )
                     else (model, Cmd.none)
                 _ -> (model, Cmd.none)
 
@@ -132,7 +132,15 @@ playerCanMove game cellClicked =
         , positiveQty game.cellQty cellClicked -- Only take pieces from a pod if the pod has pieces
         ]
 
-sow : Game -> Cell -> Dict PickledCell Int
+makeMove : Game -> Cell -> Game
+makeMove game cell = 
+    let
+        (cellQty, finishedInHome) = sow game cell
+        turn = if finishedInHome then game.turn else other game.turn
+    in
+    { game | cellQty = cellQty, turn = turn}
+
+sow : Game -> Cell -> (Dict PickledCell Int, Bool)
 sow game cell =
     let
         currentCellQty = D.get (pickle cell) (game.cellQty)
@@ -142,14 +150,14 @@ sow game cell =
         Nothing -> Debug.crash <| "Couldn't find " ++ (toString cell)
         Just qty -> sowN {game | cellQty = newCellQty} (next cell) qty
 
-sowN : Game -> Cell -> Int -> Dict PickledCell Int
+sowN : Game -> Cell -> Int -> (Dict PickledCell Int, Bool)
 sowN game cell n =
     let
         liftInc x = M.map (\n -> n + 1) x
         newCellQty = D.update (pickle cell) liftInc game.cellQty
     in
     case n of
-        0 -> game.cellQty
+        0 -> (game.cellQty, cell.kind == Pod 0)
         _ -> sowN {game | cellQty = newCellQty} (next cell) (n-1)
 
 next : Cell -> Cell

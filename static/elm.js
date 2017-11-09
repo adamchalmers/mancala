@@ -8472,7 +8472,13 @@ var _user$project$Main$sowN = F3(
 				game.cellQty);
 			var _p9 = n;
 			if (_p9 === 0) {
-				return game.cellQty;
+				return {
+					ctor: '_Tuple2',
+					_0: game.cellQty,
+					_1: _elm_lang$core$Native_Utils.eq(
+						cell.kind,
+						_user$project$Main$Pod(0))
+				};
 			} else {
 				var _v8 = _elm_lang$core$Native_Utils.update(
 					game,
@@ -8503,8 +8509,8 @@ var _user$project$Main$sow = F2(
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 141, column: 5},
-					end: {line: 143, column: 71}
+					start: {line: 149, column: 5},
+					end: {line: 151, column: 71}
 				},
 				_p10)(
 				A2(
@@ -8521,25 +8527,30 @@ var _user$project$Main$sow = F2(
 				_p10._0);
 		}
 	});
+var _user$project$Main$makeMove = F2(
+	function (game, cell) {
+		var _p12 = A2(_user$project$Main$sow, game, cell);
+		var cellQty = _p12._0;
+		var finishedInHome = _p12._1;
+		var turn = finishedInHome ? game.turn : _user$project$Main$other(game.turn);
+		return _elm_lang$core$Native_Utils.update(
+			game,
+			{cellQty: cellQty, turn: turn});
+	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p12 = msg;
-		if (_p12.ctor === 'Noop') {
+		var _p13 = msg;
+		if (_p13.ctor === 'Noop') {
 			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		} else {
-			var _p15 = _p12._0;
-			var _p13 = {ctor: '_Tuple2', _0: model, _1: _p15.kind};
-			if ((_p13.ctor === '_Tuple2') && (_p13._1.ctor === 'Pod')) {
-				var _p14 = _p13._0._0;
-				return A2(_user$project$Main$playerCanMove, _p14, _p15) ? {
+			var _p16 = _p13._0;
+			var _p14 = {ctor: '_Tuple2', _0: model, _1: _p16.kind};
+			if ((_p14.ctor === '_Tuple2') && (_p14._1.ctor === 'Pod')) {
+				var _p15 = _p14._0._0;
+				return A2(_user$project$Main$playerCanMove, _p15, _p16) ? {
 					ctor: '_Tuple2',
 					_0: _user$project$Main$Playing(
-						_elm_lang$core$Native_Utils.update(
-							_p14,
-							{
-								cellQty: A2(_user$project$Main$sow, _p14, _p15),
-								turn: _user$project$Main$other(_p14.turn)
-							})),
+						A2(_user$project$Main$makeMove, _p15, _p16)),
 					_1: _elm_lang$core$Platform_Cmd$none
 				} : {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			} else {
@@ -8555,8 +8566,8 @@ var _user$project$Main$drawCellTD = F2(
 		var msg = _elm_lang$html$Html_Events$onClick(
 			_user$project$Main$Click(cell));
 		var cellKind = function () {
-			var _p16 = cell.kind;
-			if (_p16.ctor === 'Pod') {
+			var _p17 = cell.kind;
+			if (_p17.ctor === 'Pod') {
 				return 'pod';
 			} else {
 				return 'home';
@@ -8573,8 +8584,8 @@ var _user$project$Main$drawCellTD = F2(
 					_user$project$Main$pickle(cell),
 					cellQty)));
 		var playerClass = function () {
-			var _p17 = cell.player;
-			if (_p17.ctor === 'P1') {
+			var _p18 = cell.player;
+			if (_p18.ctor === 'P1') {
 				return 'p1';
 			} else {
 				return 'p2';
@@ -8671,14 +8682,14 @@ var _user$project$Main$drawBoard = function (g) {
 };
 var _user$project$Main$view = function (model) {
 	var gfx = function (model) {
-		var _p18 = model;
-		var _p19 = _p18._0;
+		var _p19 = model;
+		var _p20 = _p19._0;
 		return {
 			ctor: '::',
-			_0: _user$project$Main$drawBoard(_p19),
+			_0: _user$project$Main$drawBoard(_p20),
 			_1: {
 				ctor: '::',
-				_0: _user$project$Main$infoText(_p19),
+				_0: _user$project$Main$infoText(_p20),
 				_1: {ctor: '[]'}
 			}
 		};
