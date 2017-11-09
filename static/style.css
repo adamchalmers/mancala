@@ -1,0 +1,36 @@
+.cell {
+	background-color: rgb(165, 108, 42);
+	width: 40px;
+	border-radius: 10px;
+	font-size: 20px;
+	text-align: center;
+	background-image: url("wood.jpg");
+}
+
+.p1 {
+	color: lightpink;
+}
+
+.p2 {
+	color: lightblue;
+}
+
+.home {
+	height: 160px;
+}
+
+.pod {
+	height: 80px;
+}
+
+table {
+	background-color: rgb(102, 65, 23);
+	background-image: url("wood2.jpg");
+	border-radius: 10px;
+	border-spacing: 5px;
+}
+
+.outer {
+	padding: 5px;
+	border: 1px solid black;
+}

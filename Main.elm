@@ -1,9 +1,10 @@
 module Main exposing (Model, Msg, init, subscriptions, update, view)
 
 import Html exposing (..)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (..)
 -- import Html.Events
 import List as L
+import String as S
 
 
 main : Program Never Model Msg
@@ -36,8 +37,10 @@ type alias Game =
 type alias Cell =
     { player: Player
     , count: Int
-    , position: Int
+    , kind: CellKind
     }
+
+type CellKind = Home | Pod Int
 
 
 type alias Model =
@@ -50,10 +53,10 @@ modelInit =
         startCount = 4
     in
     Playing
-        { cells1 = L.range 1 6 |> L.map (\n -> {player = P1, count = startCount, position = n})
-        , cells2 = L.range 1 6 |> L.map (\n -> {player = P2, count = startCount, position = n})
-        , home1 = {player = P1, count = 0, position = 7}
-        , home2 = {player = P2, count = 0, position = 7}
+        { cells1 = L.range 1 6 |> L.map (\n -> {player = P1, count = startCount, kind = Pod n})
+        , cells2 = L.range 1 6 |> L.map (\n -> {player = P2, count = startCount, kind = Pod n})
+        , home1 = {player = P1, count = 0, kind = Home}
+        , home2 = {player = P2, count = 0, kind = Home}
         , turn = P1
         }
 
@@ -87,23 +90,37 @@ drawBoard : Game -> Html Msg
 drawBoard g =
     let
         home1 =
-            td [ class "border" ] [ text <| toString g.home1 ]
+            drawCellTD g.home1
 
         home2 =
-            td [ class "border" ] [ text <| toString g.home2 ]
+            drawCellTD g.home2
 
         cells =
-            table [ class "border" ]
-                [ tr [ class "border" ] <| L.map drawCellTD g.cells1
-                , tr [ class "border" ] <| L.map drawCellTD g.cells2
+            table []
+                [ tr [] <| L.map drawCellTD g.cells1
+                , tr [] <| L.map drawCellTD g.cells2
                 ]
 
     in
-    table [] [ tr [] [ home2, cells, home1 ] ]
+    table [ class "board outer"] [ tr [] [ home1, cells, home2 ] ]
 
 drawCellTD : Cell -> Html msg
 drawCellTD cell = 
-    td [ class "border-light" ] [ text <| toString cell.count ]
+    let
+        playerClass = 
+            case cell.player of
+                P1 -> "p1"
+                P2 -> "p2"
+                
+        c = 
+            text <| toString cell.count
+
+        cellKind =
+            case cell.kind of
+                Pod _ -> "pod"
+                Home -> "home"
+    in
+    td [class <| S.join " " ["cell", cellKind, playerClass]] [ c ]
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
