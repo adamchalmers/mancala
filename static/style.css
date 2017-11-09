@@ -2,7 +2,6 @@
 	background-color: rgb(165, 108, 42);
 	width: 40px;
 	border-radius: 10px;
-	font-size: 20px;
 	text-align: center;
 	background-image: url("wood.jpg");
 }
@@ -33,4 +32,11 @@ table {
 .outer {
 	padding: 5px;
 	border: 1px solid black;
+}
+
+.cell-btn {
+	background: none;
+	border: none;
+	font-size: 20px;
+	font-family: sans-serif;
 }
