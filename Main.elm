@@ -26,11 +26,17 @@ type State
 
 
 type alias Game =
-    { cells1 : List Int
-    , cells2 : List Int
-    , home1 : Int
-    , home2 : Int
+    { cells1 : List Cell
+    , cells2 : List Cell
+    , home1 : Cell
+    , home2 : Cell
     , turn : Player
+    }
+
+type alias Cell =
+    { player: Player
+    , count: Int
+    , position: Int
     }
 
 
@@ -40,11 +46,14 @@ type alias Model =
 
 modelInit : Model
 modelInit =
+    let
+        startCount = 4
+    in
     Playing
-        { cells1 = L.repeat 6 4
-        , cells2 = L.repeat 6 4
-        , home1 = 0
-        , home2 = 0
+        { cells1 = L.range 1 6 |> L.map (\n -> {player = P1, count = startCount, position = n})
+        , cells2 = L.range 1 6 |> L.map (\n -> {player = P2, count = startCount, position = n})
+        , home1 = {player = P1, count = 0, position = 7}
+        , home2 = {player = P2, count = 0, position = 7}
         , turn = P1
         }
 
@@ -85,18 +94,16 @@ drawBoard g =
 
         cells =
             table [ class "border" ]
-                [ tr [ class "border" ] <| tds g.cells1
-                , tr [ class "border" ] <| tds g.cells2
+                [ tr [ class "border" ] <| L.map drawCellTD g.cells1
+                , tr [ class "border" ] <| L.map drawCellTD g.cells2
                 ]
 
-        tds cells =
-            L.map toTD cells
-
-        toTD n =
-            td [ class "border-light" ] [ text <| toString n ]
     in
     table [] [ tr [] [ home2, cells, home1 ] ]
 
+drawCellTD : Cell -> Html msg
+drawCellTD cell = 
+    td [ class "border-light" ] [ text <| toString cell.count ]
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
