@@ -19,11 +19,11 @@ main =
         , subscriptions = subscriptions
         }
 
-
 type Player
     = P1
     | P2
 
+other : Player -> Player
 other player = case player of
     P1 -> P2
     P2 -> P1
@@ -41,11 +41,14 @@ type alias Game =
     , turn : Player
     }
 
+type CellKind = Home | Pod Int
+
 type alias Cell =
     { player: Player
     , kind: CellKind
     }
 
+-- Because Elm can't put ADTs into dicts, we need an isomorphism between Cell and comparable.
 type alias PickledCell = (Int, Int)
 
 pickle : Cell -> PickledCell
@@ -71,9 +74,6 @@ unpickle (p, k) =
             n -> Pod n
     in
         {player = player, kind = kind}
-        
-
-type CellKind = Home | Pod Int
 
 
 type alias Model =
@@ -84,8 +84,10 @@ modelInit : Model
 modelInit =
     let
         startCount = 4
-        cells1 = L.range 0 5 |> L.map (\n -> {player = P1, kind = Pod n})
-        cells2 = L.range 0 5 |> L.map (\n -> {player = P2, kind = Pod n})
+        numPods = 6
+        podRange = L.range 0 (numPods - 1)
+        cells1 = podRange |> L.map (\n -> {player = P1, kind = Pod n})
+        cells2 = podRange |> L.map (\n -> {player = P2, kind = Pod n})
         home1 = {player = P1, kind = Home}
         home2 = {player = P2, kind = Home}
         allCells = L.concat [cells1, cells2, [home1, home2]]
@@ -112,29 +114,43 @@ update msg model =
             ( model, Cmd.none )
         Click cell ->
             case (model, cell.kind) of
-                -- Only do something if the player is playing and you press a Pod (not a Home)
-                (Playing game, Pod _) -> ( Playing <| sow game cell, Cmd.none )
+                -- Only process clicks if the game is playing
+                (Playing game, Pod _) -> 
+                    if playerCanMove game cell
+                    then ( Playing { game | cellQty = sow game cell, turn = other game.turn}, Cmd.none )
+                    else (model, Cmd.none)
                 _ -> (model, Cmd.none)
 
-sow : Game -> Cell -> Game
+playerCanMove : Game -> Cell -> Bool
+playerCanMove game cellClicked =
+    let
+        pos n = n > 0
+        positiveQty cellQty cell = D.get (pickle cell) cellQty |> M.map pos |> withDefault False
+    in
+    L.all identity 
+        [ game.turn == cellClicked.player -- Only accept moves if it's the player's turn
+        , positiveQty game.cellQty cellClicked -- Only take pieces from a pod if the pod has pieces
+        ]
+
+sow : Game -> Cell -> Dict PickledCell Int
 sow game cell =
     let
-        qty = D.get (pickle cell) (game.cellQty)
+        currentCellQty = D.get (pickle cell) (game.cellQty)
         newCellQty = D.update (pickle cell) (M.map <| always 0) game.cellQty
     in
-    case qty of
+    case currentCellQty of
         Nothing -> Debug.crash <| "Couldn't find " ++ (toString cell)
-        Just q -> sowN {game | cellQty = newCellQty} (next cell) q
+        Just qty -> sowN {game | cellQty = newCellQty} (next cell) qty
 
-sowN : Game -> Cell -> Int -> Game
-sowN game cell q =
+sowN : Game -> Cell -> Int -> Dict PickledCell Int
+sowN game cell n =
     let
         liftInc x = M.map (\n -> n + 1) x
         newCellQty = D.update (pickle cell) liftInc game.cellQty
     in
-    case q of
-        0 -> game
-        _ -> sowN {game | cellQty = newCellQty} (next cell) (q-1)
+    case n of
+        0 -> game.cellQty
+        _ -> sowN {game | cellQty = newCellQty} (next cell) (n-1)
 
 next : Cell -> Cell
 next cell = 
@@ -155,10 +171,12 @@ view model =
         gfx model =
             case model of
                 Playing g ->
-                    [ drawBoard g ]
+                    [ drawBoard g
+                    , infoText g ]
     in
     div [] <| headings ++ gfx model
 
+infoText g = text <| "It's " ++ (toString g.turn) ++ "'s turn."
 
 drawBoard : Game -> Html Msg
 drawBoard g =

@@ -8263,6 +8263,16 @@ var _elm_lang$html$Html_Events$Options = F2(
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };
+var _user$project$Main$infoText = function (g) {
+	return _elm_lang$html$Html$text(
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'It\'s ',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(g.turn),
+				'\'s turn.')));
+};
 var _user$project$Main$pickle = function (c) {
 	var kind = function () {
 		var _p0 = c.kind;
@@ -8282,6 +8292,37 @@ var _user$project$Main$pickle = function (c) {
 	}();
 	return {ctor: '_Tuple2', _0: player, _1: kind};
 };
+var _user$project$Main$playerCanMove = F2(
+	function (game, cellClicked) {
+		var pos = function (n) {
+			return _elm_lang$core$Native_Utils.cmp(n, 0) > 0;
+		};
+		var positiveQty = F2(
+			function (cellQty, cell) {
+				return A2(
+					_elm_lang$core$Maybe$withDefault,
+					false,
+					A2(
+						_elm_lang$core$Maybe$map,
+						pos,
+						A2(
+							_elm_lang$core$Dict$get,
+							_user$project$Main$pickle(cell),
+							cellQty)));
+			});
+		return A2(
+			_elm_lang$core$List$all,
+			_elm_lang$core$Basics$identity,
+			{
+				ctor: '::',
+				_0: _elm_lang$core$Native_Utils.eq(game.turn, cellClicked.player),
+				_1: {
+					ctor: '::',
+					_0: A2(positiveQty, game.cellQty, cellClicked),
+					_1: {ctor: '[]'}
+				}
+			});
+	});
 var _user$project$Main$Game = F6(
 	function (a, b, c, d, e, f) {
 		return {cells1: a, cells2: b, home1: c, home2: d, cellQty: e, turn: f};
@@ -8330,15 +8371,8 @@ var _user$project$Main$unpickle = function (_p3) {
 var _user$project$Main$modelInit = function () {
 	var home2 = {player: _user$project$Main$P2, kind: _user$project$Main$Home};
 	var home1 = {player: _user$project$Main$P1, kind: _user$project$Main$Home};
-	var cells2 = A2(
-		_elm_lang$core$List$map,
-		function (n) {
-			return {
-				player: _user$project$Main$P2,
-				kind: _user$project$Main$Pod(n)
-			};
-		},
-		A2(_elm_lang$core$List$range, 0, 5));
+	var numPods = 6;
+	var podRange = A2(_elm_lang$core$List$range, 0, numPods - 1);
 	var cells1 = A2(
 		_elm_lang$core$List$map,
 		function (n) {
@@ -8347,7 +8381,16 @@ var _user$project$Main$modelInit = function () {
 				kind: _user$project$Main$Pod(n)
 			};
 		},
-		A2(_elm_lang$core$List$range, 0, 5));
+		podRange);
+	var cells2 = A2(
+		_elm_lang$core$List$map,
+		function (n) {
+			return {
+				player: _user$project$Main$P2,
+				kind: _user$project$Main$Pod(n)
+			};
+		},
+		podRange);
 	var allCells = _elm_lang$core$List$concat(
 		{
 			ctor: '::',
@@ -8411,7 +8454,7 @@ var _user$project$Main$next = function (cell) {
 	}
 };
 var _user$project$Main$sowN = F3(
-	function (game, cell, q) {
+	function (game, cell, n) {
 		sowN:
 		while (true) {
 			var liftInc = function (x) {
@@ -8427,18 +8470,18 @@ var _user$project$Main$sowN = F3(
 				_user$project$Main$pickle(cell),
 				liftInc,
 				game.cellQty);
-			var _p9 = q;
+			var _p9 = n;
 			if (_p9 === 0) {
-				return game;
+				return game.cellQty;
 			} else {
 				var _v8 = _elm_lang$core$Native_Utils.update(
 					game,
 					{cellQty: newCellQty}),
 					_v9 = _user$project$Main$next(cell),
-					_v10 = q - 1;
+					_v10 = n - 1;
 				game = _v8;
 				cell = _v9;
-				q = _v10;
+				n = _v10;
 				continue sowN;
 			}
 		}
@@ -8451,17 +8494,17 @@ var _user$project$Main$sow = F2(
 			_elm_lang$core$Maybe$map(
 				_elm_lang$core$Basics$always(0)),
 			game.cellQty);
-		var qty = A2(
+		var currentCellQty = A2(
 			_elm_lang$core$Dict$get,
 			_user$project$Main$pickle(cell),
 			game.cellQty);
-		var _p10 = qty;
+		var _p10 = currentCellQty;
 		if (_p10.ctor === 'Nothing') {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 124, column: 5},
-					end: {line: 126, column: 67}
+					start: {line: 141, column: 5},
+					end: {line: 143, column: 71}
 				},
 				_p10)(
 				A2(
@@ -8484,15 +8527,21 @@ var _user$project$Main$update = F2(
 		if (_p12.ctor === 'Noop') {
 			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		} else {
-			var _p14 = _p12._0;
-			var _p13 = {ctor: '_Tuple2', _0: model, _1: _p14.kind};
+			var _p15 = _p12._0;
+			var _p13 = {ctor: '_Tuple2', _0: model, _1: _p15.kind};
 			if ((_p13.ctor === '_Tuple2') && (_p13._1.ctor === 'Pod')) {
-				return {
+				var _p14 = _p13._0._0;
+				return A2(_user$project$Main$playerCanMove, _p14, _p15) ? {
 					ctor: '_Tuple2',
 					_0: _user$project$Main$Playing(
-						A2(_user$project$Main$sow, _p13._0._0, _p14)),
+						_elm_lang$core$Native_Utils.update(
+							_p14,
+							{
+								cellQty: A2(_user$project$Main$sow, _p14, _p15),
+								turn: _user$project$Main$other(_p14.turn)
+							})),
 					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				} : {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			} else {
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			}
@@ -8506,8 +8555,8 @@ var _user$project$Main$drawCellTD = F2(
 		var msg = _elm_lang$html$Html_Events$onClick(
 			_user$project$Main$Click(cell));
 		var cellKind = function () {
-			var _p15 = cell.kind;
-			if (_p15.ctor === 'Pod') {
+			var _p16 = cell.kind;
+			if (_p16.ctor === 'Pod') {
 				return 'pod';
 			} else {
 				return 'home';
@@ -8524,8 +8573,8 @@ var _user$project$Main$drawCellTD = F2(
 					_user$project$Main$pickle(cell),
 					cellQty)));
 		var playerClass = function () {
-			var _p16 = cell.player;
-			if (_p16.ctor === 'P1') {
+			var _p17 = cell.player;
+			if (_p17.ctor === 'P1') {
 				return 'p1';
 			} else {
 				return 'p2';
@@ -8622,11 +8671,16 @@ var _user$project$Main$drawBoard = function (g) {
 };
 var _user$project$Main$view = function (model) {
 	var gfx = function (model) {
-		var _p17 = model;
+		var _p18 = model;
+		var _p19 = _p18._0;
 		return {
 			ctor: '::',
-			_0: _user$project$Main$drawBoard(_p17._0),
-			_1: {ctor: '[]'}
+			_0: _user$project$Main$drawBoard(_p19),
+			_1: {
+				ctor: '::',
+				_0: _user$project$Main$infoText(_p19),
+				_1: {ctor: '[]'}
+			}
 		};
 	};
 	var headings = {
