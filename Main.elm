@@ -21,7 +21,7 @@ update msg model =
             case (model, cell.kind) of
                 -- Only process clicks if the game is playing
                 (Playing game, Pod _) -> 
-                    if Rules.playerCanMove game cell
+                    if Rules.validMove game cell
                     then ( Playing (Rules.makeMove game cell), Cmd.none )
                     else (model, Cmd.none)
                 _ -> (model, Cmd.none)

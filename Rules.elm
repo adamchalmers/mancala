@@ -1,15 +1,16 @@
-module Rules exposing (makeMove, playerCanMove, initialModel)
+module Rules exposing (makeMove, validMove, initialModel)
 
 import Dict as D exposing (Dict)
 import Maybe as M exposing (withDefault)
 import List as L
 import Models exposing (..)
 
+numPods = 6
+
 initialModel : Model
 initialModel =
     let
         startCount = 4
-        numPods = 6
         podRange = L.range 0 (numPods - 1)
         cells1 = podRange |> L.map (\n -> {player = P1, kind = Pod n})
         cells2 = podRange |> L.map (\n -> {player = P2, kind = Pod n})
@@ -26,8 +27,8 @@ initialModel =
         , cellQty = D.fromList <| L.map (\c -> (pickle c, startCount)) allCells
         }
 
-playerCanMove : Game -> Cell -> Bool
-playerCanMove game cellClicked =
+validMove : Game -> Cell -> Bool
+validMove game cellClicked =
     let
         pos n = n > 0
         positiveQty cellQty cell = D.get (pickle cell) cellQty |> M.map pos |> withDefault False
@@ -48,14 +49,20 @@ makeMove game cell =
 sow : Game -> Cell -> (Dict PickledCell Int, Bool)
 sow game cell =
     let
+        -- Find how many seeds are in the current cell
         currentCellQty = D.get (pickle cell) (game.cellQty)
+        qty = case currentCellQty of
+            Nothing -> Debug.crash <| "Couldn't find cell " ++ (toString cell)
+            Just q -> q
+        -- Empty the current cell
         newCellQty = D.update (pickle cell) (M.map <| always 0) game.cellQty
+            
     in
-    case currentCellQty of
-        Nothing -> Debug.crash <| "Couldn't find " ++ (toString cell)
-        Just qty -> sowN {game | cellQty = newCellQty} (next cell) qty
+    sowN {game | cellQty = newCellQty} (next game.turn cell) qty
 
 sowN : Game -> Cell -> Int -> (Dict PickledCell Int, Bool)
+-- Starting from `cell`, take `n` seeds and sow them in consecutive cells around the board.
+-- Returns the new quantities of seeds in each cell, and whether the last cell was your home.
 sowN game cell n =
     let
         liftInc x = M.map (\n -> n + 1) x
@@ -63,13 +70,17 @@ sowN game cell n =
     in
     case n of
         0 -> (game.cellQty, cell.kind == Pod 0)
-        _ -> sowN {game | cellQty = newCellQty} (next cell) (n-1)
+        _ -> sowN {game | cellQty = newCellQty} (next game.turn cell) (n-1)
 
-next : Cell -> Cell
-next cell = 
+next : Player -> Cell -> Cell
+-- When `player` is sowing, returns the cell which comes after `cell`
+next whoseTurn cell = 
     case cell.kind of
         Home -> {player = other cell.player, kind = Pod 0}
         Pod n -> 
-            if n == 5 
-            then {cell | kind = Home}
+            if n == numPods - 1 
+            then 
+                if cell.player == whoseTurn
+                then {cell | kind = Home}
+                else {player = other cell.player, kind = Pod 0}
             else {cell | kind = Pod (n+1)}

@@ -8492,109 +8492,7 @@ var _user$project$GUI$view = function (model) {
 			gfx(model)));
 };
 
-var _user$project$Rules$next = function (cell) {
-	var _p0 = cell.kind;
-	if (_p0.ctor === 'Home') {
-		return {
-			player: _user$project$Models$other(cell.player),
-			kind: _user$project$Models$Pod(0)
-		};
-	} else {
-		var _p1 = _p0._0;
-		return _elm_lang$core$Native_Utils.eq(_p1, 5) ? _elm_lang$core$Native_Utils.update(
-			cell,
-			{kind: _user$project$Models$Home}) : _elm_lang$core$Native_Utils.update(
-			cell,
-			{
-				kind: _user$project$Models$Pod(_p1 + 1)
-			});
-	}
-};
-var _user$project$Rules$sowN = F3(
-	function (game, cell, n) {
-		sowN:
-		while (true) {
-			var liftInc = function (x) {
-				return A2(
-					_elm_lang$core$Maybe$map,
-					function (n) {
-						return n + 1;
-					},
-					x);
-			};
-			var newCellQty = A3(
-				_elm_lang$core$Dict$update,
-				_user$project$Models$pickle(cell),
-				liftInc,
-				game.cellQty);
-			var _p2 = n;
-			if (_p2 === 0) {
-				return {
-					ctor: '_Tuple2',
-					_0: game.cellQty,
-					_1: _elm_lang$core$Native_Utils.eq(
-						cell.kind,
-						_user$project$Models$Pod(0))
-				};
-			} else {
-				var _v2 = _elm_lang$core$Native_Utils.update(
-					game,
-					{cellQty: newCellQty}),
-					_v3 = _user$project$Rules$next(cell),
-					_v4 = n - 1;
-				game = _v2;
-				cell = _v3;
-				n = _v4;
-				continue sowN;
-			}
-		}
-	});
-var _user$project$Rules$sow = F2(
-	function (game, cell) {
-		var newCellQty = A3(
-			_elm_lang$core$Dict$update,
-			_user$project$Models$pickle(cell),
-			_elm_lang$core$Maybe$map(
-				_elm_lang$core$Basics$always(0)),
-			game.cellQty);
-		var currentCellQty = A2(
-			_elm_lang$core$Dict$get,
-			_user$project$Models$pickle(cell),
-			game.cellQty);
-		var _p3 = currentCellQty;
-		if (_p3.ctor === 'Nothing') {
-			return _elm_lang$core$Native_Utils.crashCase(
-				'Rules',
-				{
-					start: {line: 54, column: 5},
-					end: {line: 56, column: 71}
-				},
-				_p3)(
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					'Couldn\'t find ',
-					_elm_lang$core$Basics$toString(cell)));
-		} else {
-			return A3(
-				_user$project$Rules$sowN,
-				_elm_lang$core$Native_Utils.update(
-					game,
-					{cellQty: newCellQty}),
-				_user$project$Rules$next(cell),
-				_p3._0);
-		}
-	});
-var _user$project$Rules$makeMove = F2(
-	function (game, cell) {
-		var _p5 = A2(_user$project$Rules$sow, game, cell);
-		var cellQty = _p5._0;
-		var finishedInHome = _p5._1;
-		var turn = finishedInHome ? game.turn : _user$project$Models$other(game.turn);
-		return _elm_lang$core$Native_Utils.update(
-			game,
-			{cellQty: cellQty, turn: turn});
-	});
-var _user$project$Rules$playerCanMove = F2(
+var _user$project$Rules$validMove = F2(
 	function (game, cellClicked) {
 		var pos = function (n) {
 			return _elm_lang$core$Native_Utils.cmp(n, 0) > 0;
@@ -8625,11 +8523,11 @@ var _user$project$Rules$playerCanMove = F2(
 				}
 			});
 	});
+var _user$project$Rules$numPods = 6;
 var _user$project$Rules$initialModel = function () {
 	var home2 = {player: _user$project$Models$P2, kind: _user$project$Models$Home};
 	var home1 = {player: _user$project$Models$P1, kind: _user$project$Models$Home};
-	var numPods = 6;
-	var podRange = A2(_elm_lang$core$List$range, 0, numPods - 1);
+	var podRange = A2(_elm_lang$core$List$range, 0, _user$project$Rules$numPods - 1);
 	var cells1 = A2(
 		_elm_lang$core$List$map,
 		function (n) {
@@ -8691,6 +8589,115 @@ var _user$project$Rules$initialModel = function () {
 					allCells))
 		});
 }();
+var _user$project$Rules$next = F2(
+	function (whoseTurn, cell) {
+		var _p0 = cell.kind;
+		if (_p0.ctor === 'Home') {
+			return {
+				player: _user$project$Models$other(cell.player),
+				kind: _user$project$Models$Pod(0)
+			};
+		} else {
+			var _p1 = _p0._0;
+			return _elm_lang$core$Native_Utils.eq(_p1, _user$project$Rules$numPods - 1) ? (_elm_lang$core$Native_Utils.eq(cell.player, whoseTurn) ? _elm_lang$core$Native_Utils.update(
+				cell,
+				{kind: _user$project$Models$Home}) : {
+				player: _user$project$Models$other(cell.player),
+				kind: _user$project$Models$Pod(0)
+			}) : _elm_lang$core$Native_Utils.update(
+				cell,
+				{
+					kind: _user$project$Models$Pod(_p1 + 1)
+				});
+		}
+	});
+var _user$project$Rules$sowN = F3(
+	function (game, cell, n) {
+		sowN:
+		while (true) {
+			var liftInc = function (x) {
+				return A2(
+					_elm_lang$core$Maybe$map,
+					function (n) {
+						return n + 1;
+					},
+					x);
+			};
+			var newCellQty = A3(
+				_elm_lang$core$Dict$update,
+				_user$project$Models$pickle(cell),
+				liftInc,
+				game.cellQty);
+			var _p2 = n;
+			if (_p2 === 0) {
+				return {
+					ctor: '_Tuple2',
+					_0: game.cellQty,
+					_1: _elm_lang$core$Native_Utils.eq(
+						cell.kind,
+						_user$project$Models$Pod(0))
+				};
+			} else {
+				var _v2 = _elm_lang$core$Native_Utils.update(
+					game,
+					{cellQty: newCellQty}),
+					_v3 = A2(_user$project$Rules$next, game.turn, cell),
+					_v4 = n - 1;
+				game = _v2;
+				cell = _v3;
+				n = _v4;
+				continue sowN;
+			}
+		}
+	});
+var _user$project$Rules$sow = F2(
+	function (game, cell) {
+		var newCellQty = A3(
+			_elm_lang$core$Dict$update,
+			_user$project$Models$pickle(cell),
+			_elm_lang$core$Maybe$map(
+				_elm_lang$core$Basics$always(0)),
+			game.cellQty);
+		var currentCellQty = A2(
+			_elm_lang$core$Dict$get,
+			_user$project$Models$pickle(cell),
+			game.cellQty);
+		var qty = function () {
+			var _p3 = currentCellQty;
+			if (_p3.ctor === 'Nothing') {
+				return _elm_lang$core$Native_Utils.crashCase(
+					'Rules',
+					{
+						start: {line: 54, column: 15},
+						end: {line: 56, column: 24}
+					},
+					_p3)(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'Couldn\'t find cell ',
+						_elm_lang$core$Basics$toString(cell)));
+			} else {
+				return _p3._0;
+			}
+		}();
+		return A3(
+			_user$project$Rules$sowN,
+			_elm_lang$core$Native_Utils.update(
+				game,
+				{cellQty: newCellQty}),
+			A2(_user$project$Rules$next, game.turn, cell),
+			qty);
+	});
+var _user$project$Rules$makeMove = F2(
+	function (game, cell) {
+		var _p5 = A2(_user$project$Rules$sow, game, cell);
+		var cellQty = _p5._0;
+		var finishedInHome = _p5._1;
+		var turn = finishedInHome ? game.turn : _user$project$Models$other(game.turn);
+		return _elm_lang$core$Native_Utils.update(
+			game,
+			{cellQty: cellQty, turn: turn});
+	});
 
 var _user$project$Main$init = {ctor: '_Tuple2', _0: _user$project$Rules$initialModel, _1: _elm_lang$core$Platform_Cmd$none};
 var _user$project$Main$subscriptions = function (model) {
@@ -8703,7 +8710,7 @@ var _user$project$Main$update = F2(
 		var _p1 = {ctor: '_Tuple2', _0: model, _1: _p3.kind};
 		if ((_p1.ctor === '_Tuple2') && (_p1._1.ctor === 'Pod')) {
 			var _p2 = _p1._0._0;
-			return A2(_user$project$Rules$playerCanMove, _p2, _p3) ? {
+			return A2(_user$project$Rules$validMove, _p2, _p3) ? {
 				ctor: '_Tuple2',
 				_0: _user$project$Models$Playing(
 					A2(_user$project$Rules$makeMove, _p2, _p3)),
