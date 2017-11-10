@@ -14,6 +14,16 @@
 	color: lightblue;
 }
 
+.p1-dark {
+	color: rgb(173, 58, 79);
+	font-weight: bolder;
+}
+
+.p2-dark {
+	color: rgb(66, 149, 172);
+	font-weight: bolder;
+}
+
 .home {
 	height: 160px;
 }

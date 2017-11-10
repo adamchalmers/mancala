@@ -11,6 +11,14 @@ other player = case player of
     P1 -> P2
     P2 -> P1
 
+
+playerString player = case player of
+    P1 -> "P1"
+    P2 -> "P2"
+playerInt player = case player of
+    P1 -> 1
+    P2 -> 2
+
 type alias Game =
     { cells1 : List Cell
     , cells2 : List Cell
@@ -33,14 +41,11 @@ type alias PickledCell = (Int, Int)
 pickle : Cell -> PickledCell
 pickle c = 
     let
-        player = case c.player of
-            P1 -> 1
-            P2 -> 2
         kind = case c.kind of
             Home -> -1
             Pod n -> n
     in
-    (player, kind)
+    (playerInt c.player, kind)
 
 unpickle : PickledCell -> Cell
 unpickle (p, k) = 
@@ -56,9 +61,16 @@ unpickle (p, k) =
 
 
 type State
+    -- Game is being played
     = Playing Game
+    -- Nothing = game tied
+    | Winner Game (Maybe Player) 
+
 type alias Model =
     State
 
 type Msg
     = Click Cell
+    | Restart
+
+type MoveResult = Normal | InHome | GameOver

@@ -20,10 +20,30 @@ view model =
                 Playing g ->
                     [ drawBoard g
                     , infoText g ]
+                Winner g player ->
+                    [ drawBoard g ] ++ (winnerGUI g player)
     in
     div [] <| headings ++ gfx model
 
-infoText g = text <| "It's " ++ (toString g.turn) ++ "'s turn."
+infoText g = span [] 
+    [ text "It's "
+    , span [class <| (playerClass g.turn) ++ "-dark"] [text (toString g.turn)]
+    , text "'s turn."
+    ]
+
+winnerGUI : Game -> Maybe Player -> List (Html Msg)
+winnerGUI g player = 
+    let
+        c = withDefault "" <| M.map playerClass player
+        winnerText = M.map playerString player 
+            |> M.andThen (\t -> Just <| span [] 
+                [ span [class <| c] [text t]
+                , text " won!"
+                ])
+            |> withDefault (text "It's a tie!")
+    in
+        [ h2 [] [ winnerText ]
+        , button [onClick Restart] [text "Play again"]]
 
 drawBoard : Game -> Html Msg
 drawBoard g =
@@ -46,11 +66,6 @@ drawBoard g =
 drawCellTD : Dict PickledCell Int -> Cell -> Html Msg
 drawCellTD cellQty cell = 
     let
-        playerClass = 
-            case cell.player of
-                P1 -> "p1"
-                P2 -> "p2"
-
         countText = 
             D.get (pickle cell) cellQty |> M.map toString |> withDefault "?"
 
@@ -59,6 +74,12 @@ drawCellTD cellQty cell =
                 Pod _ -> "pod"
                 Home -> "home"
         msg = onClick (Click cell)
-        classes = S.join " " ["cell", cellKind, playerClass]
+        classes = S.join " " ["cell", cellKind, playerClass cell.player]
     in
     td [class classes, onClick (Click cell)] [ text countText ]
+
+
+playerClass player = 
+    case player of
+        P1 -> "p1"
+        P2 -> "p2"

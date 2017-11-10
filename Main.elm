@@ -22,9 +22,11 @@ update msg model =
                 -- Only process clicks if the game is playing
                 (Playing game, Pod _) -> 
                     if Rules.validMove game cell
-                    then ( Playing (Rules.makeMove game cell), Cmd.none )
+                    then (Rules.stateAfterMove game cell , Cmd.none )
                     else (model, Cmd.none)
                 _ -> (model, Cmd.none)
+        Restart ->
+            init
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
